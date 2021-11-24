@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+  <div class="content-section">
+    <div class="media">
+        <img class="rounded-circle account-img" src="{{ url_for('static', filename='profile_pics/' + user.image_file) }}">
+        <div class="media-body">
+            <h2 class="account-heading">{{ user.username }}</h2>
+            <p> Member since {{ user.date_created.strftime('%b %d, %Y') }}</p>
+            <p><b> {{ user.total_upvotes }} </b> Total Upvotes </p>
+            <a class="btn btn-outline-info mb-4" href="{{ url_for('users.user_posts', username=user.username) }}"> Posts </a>
+            <a class="btn btn-outline-info mb-4" href="{{ url_for('users.user_replies', username=user.username) }}"> Replies </a>
+        </div>
+    </div>
+  </div>
+{% endblock content %}

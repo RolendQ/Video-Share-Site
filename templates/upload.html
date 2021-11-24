@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+{% block content %}
+	<h2>Upload a small video</h2>
+	{% if file_id %}
+		<div style="margin: 10px auto;">
+			<video autoplay="autoplay" controls="controls" preload="preload">
+				<source src="{{ url_for('posts.display_video', file_id=file_id) }}" type="video/mp4"></source>
+			</video>
+		</div>
+	{% endif %}
+	<form method="post" action="/upload" enctype="multipart/form-data">
+	    <dl>
+			<p>
+				<input type="file" name="file" autocomplete="off" required>
+			</p>
+	    </dl>
+	    <p>
+			<input type="submit" value="Upload">
+		</p>
+	</form>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "layout.html" %}
+{% block content %}
+  <article class="media content-section">
+    <img class="rounded-circle article-img" src="{{ url_for('static', filename='profile_pics/' + post.author.image_file) }}">
+    <div class="media-body">
+      <div class="article-metadata">
+        <a class="mr-2" href="{{ url_for('users.user_profile', username=post.author.username) }}">{{ post.author.username }}</a>
+        <small class="text-muted">{{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+        {% if post.author == current_user %}
+          <div>
+            <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{{ url_for('posts.update_post', post_id=post.id) }}">Update</a>
+            <button type="button" class="btn btn-danger btn-sm m-1" data-toggle="modal" data-target="#deleteModal">Delete</button>
+          </div>
+        {% endif %}
+      </div>
+      <h2 class="article-title">{{ post.title }}</h2>
+      <p class="article-content">{{ post.content }}</p>
+      <div>
+        {% if post.video_id %}
+          {% if 'mp4' in post.video_id %}
+            <video autoplay="autoplay" controls="controls" preload="preload">
+              <source src="{{ url_for('posts.display_video', file_id=post.video_id) }}" type="video/mp4"></source>
+            </video>
+          {% else %}
+            <iframe src="https://www.youtube.com/embed/{{ post.video_id }}?autoplay=1" width="600" height="330" frameborder="0" allowfullscreen></iframe>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% if (post.author == current_user) %}
+        <a class="btn btn-secondary btn-sm mt-1 mb-1" href=""><b>{{ post.upvotes }}</b> Upvotes</a>
+      {% elif not can_upvote %}
+        <a class="btn btn-danger btn-sm mt-1 mb-1" title="Remove your upvote" href="{{ url_for('posts.post', post_id=post.id, upvote=true) }}"><b>{{ post.upvotes }}</b> Upvotes</a>
+      {% else %}
+        <a class="btn btn-primary btn-sm mt-1 mb-1" title="Add your upvote" href="{{ url_for('posts.post', post_id=post.id, upvote=true) }}"><b>{{ post.upvotes }}</b> Upvotes</a>
+      {% endif %}
+    </div>
+  </article>
+  <article class="media content-section">
+    <div class="media-body">
+      <h3 class="">Replies &mdash; ({{ replies.total }} total, displaying {{ replies.items|length}})</h3>
+      <div>
+        {% if total_replies == 0 %}
+          <p> None </p>
+        {% else %}
+          {% for reply in replies.items %}
+              <img class="rounded-circle reply-img" src="{{ url_for('static', filename='profile_pics/' + reply.author.image_file) }}">
+              <div class="media-body">
+                <div class="article-metadata">
+                  <a class="mr-2" href="{{ url_for('users.user_profile', username=reply.author.username) }}">{{ reply.author.username }}</a>
+                  {% if reply.author == current_user %}
+                      <a class="reply-delete" href="{{ url_for('posts.delete_reply', reply_id=reply.id) }}">Delete</a>
+                  {% endif %}
+                </div>
+                <p class="article-content">{{ reply.content }}</p>
+                <br>
+                <small class="text-muted reply-timestamp">{{ reply.date_replied.strftime('%b %d, %Y %I:%M %p') }}</small>
+                <br>
+              </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <br>
+      {% for page_num in replies.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if page_num %}
+          {% if replies.page == page_num %}
+            <a class="btn btn-info mb-4" href="{{ url_for('posts.post', post_id=post.id, page=page_num) }}">{{ page_num }}</a>
+          {% else %}
+            <a class="btn btn-outline-info mb-4" href="{{ url_for('posts.post', post_id=post.id, page=page_num) }}">{{ page_num }}</a>
+          {% endif %}
+        {% else %}
+          ...
+        {% endif %}
+      {% endfor %}
+      <br>
+      {% if current_user.is_authenticated %}
+        <img class="rounded-circle reply-img" src="{{ url_for('static', filename='profile_pics/' + current_user.image_file) }}">
+        <p></p>
+        <form method="POST" action="">
+          {{ form.hidden_tag() }}
+          <div class="form-group">
+            {% if form.content.errors %}
+                {{ form.content(class="form-control form-control-lg is-invalid") }}
+                <div class="invalid-feedback">
+                    {% for error in form.content.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% else %}
+                {{ form.content(class="form-control form-control-lg") }}
+            {% endif %}
+          </div>
+          <div class="form-group">
+            {{ form.submit(class="btn btn-outline-info") }}
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  </article>
+
+  <!-- Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Delete Post?</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <form action="{{ url_for('posts.delete_post', post_id=post.id) }}" method="POST">
+            <input class="btn btn-danger" type="submit" value="Delete">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
